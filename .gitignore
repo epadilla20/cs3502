@@ -1,4 +1,7 @@
 # Compiled files
+consumer
+producer
+bidirectional
 *.o
 *.out
 a.out
@@ -17,3 +20,7 @@ logwriter
 # OS files
 .DS_Store
 Thumbs.db
+
+#Test files
+*.bin
+*.txt
