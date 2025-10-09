@@ -1,0 +1,20 @@
+# Ignore compiled binaries
+phase1
+phase2
+phase3
+phase4
+*.o
+*.out
+
+# Ignore reports and other docs
+*.pdf
+*.docx
+*.zip
+
+# Ignore system files
+.DS_Store
+Thumbs.db
+
+#Allow the README.txt
+!README.txt
+
