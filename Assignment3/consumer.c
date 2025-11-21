@@ -48,9 +48,18 @@ int main(int argc, char* argv[]) {
     srand(time(NULL) + consumer_id * 100);
     
     // TODO: Attach to shared memory
-    shm_id = shmget(SHM_KEY, sizeof(shared_buffer_t), 0666);
+    int retry_count = 0;
+    while (retry_count < 10) {
+        shm_id = shmget(SHM_KEY, sizeof(shared_buffer_t), 0666);
+        if (shm_id >= 0) {
+            break; 
+        }
+        usleep(100000);  
+        retry_count++;
+    }
+    
     if (shm_id < 0) {
-        perror("shmget failed");
+        perror("shmget failed - producer may not be running");
         exit(1);
     }
     
@@ -59,20 +68,34 @@ int main(int argc, char* argv[]) {
         perror("shmat failed");
         exit(1);
     }
-    
     // TODO: Open semaphores (don't use O_CREAT - producer creates them)
-    mutex = sem_open(SEM_MUTEX, 0);
-    empty = sem_open(SEM_EMPTY, 0);
-    full = sem_open(SEM_FULL, 0);
+    retry_count = 0;
+    while (retry_count < 10) {
+        mutex = sem_open(SEM_MUTEX, 0);
+        empty = sem_open(SEM_EMPTY, 0);
+        full = sem_open(SEM_FULL, 0);
+        
+        if (mutex != SEM_FAILED && empty != SEM_FAILED && full != SEM_FAILED) {
+            break;  
+        }
+        
+        
+        if (mutex != SEM_FAILED) sem_close(mutex);
+        if (empty != SEM_FAILED) sem_close(empty);
+        if (full != SEM_FAILED) sem_close(full);
+        
+        usleep(100000);  
+        retry_count++;
+    }
     
     if (mutex == SEM_FAILED || empty == SEM_FAILED || full == SEM_FAILED) {
-        perror("sem_open failed");
+        perror("sem_open failed - producer may not have created semaphores");
         cleanup();
         exit(1);
     }
-
-    printf("Consumer %d: Starting to consume %d items\n", consumer_id, num_items);
     
+    printf("Consumer %d: Starting to consume %d items\n", consumer_id, num_items);
+
     // TODO: Main consumption loop
     for (int i = 0; i < num_items; i++) {
         // TODO: Wait for full slot
